@@ -197,97 +197,149 @@ app.use(cors({
 
 ---
 
-### Step 4: Deploy Main Website (Vercel Recommended)
+### Step 4: Deploy Main Website to Netlify
 
-1. **Update API Endpoint**
+#### 4.1 Update API Endpoint (Before Deployment)
 
-   In `/client/services/apiService.ts`, update the base URL:
+In `/client/services/apiService.ts`, update the base URL:
 
-   ```typescript
-   const API_BASE_URL = 'https://ldoia-backend-production.up.railway.app';
-   // OR
-   const API_BASE_URL = 'https://ldoia-backend.onrender.com';
-   ```
+```typescript
+const API_BASE_URL = 'https://ldoia-backend-production.up.railway.app';
+// OR
+const API_BASE_URL = 'https://ldoia-backend.onrender.com';
+```
 
-2. **Deploy to Vercel**
+#### 4.2 Netlify Deployment Configuration
 
-   ```bash
-   # Install Vercel CLI
-   npm install -g vercel
+**Repository:** `https://github.com/Muskaan786/ldoia.git`
 
-   # Login to Vercel
-   vercel login
+**Team:** Developer
 
-   # Deploy
-   vercel --prod
-   ```
+**Branch to Deploy:** `main`
 
-   **Or via Vercel Dashboard:**
-   - Go to https://vercel.com
-   - Click "Add New Project"
-   - Import your GitHub repository
-   - Configure:
-     ```
-     Framework Preset: Vite
-     Root Directory: ./
-     Build Command: npm run build
-     Output Directory: dist
-     Install Command: npm install
-     ```
+##### Build Settings
 
-3. **Configure Domain**
-   - Go to Project Settings → Domains
-   - Add custom domain: `ldoia.com`
-   - Add `www.ldoia.com` as alias
-   - Follow DNS configuration instructions
+| Setting | Value | Description |
+|---------|-------|-------------|
+| **Base directory** | Leave empty | Root of repository |
+| **Build command** | `npm run build` | Vite build command |
+| **Publish directory** | `dist` | Vite output directory |
+| **Functions directory** | `netlify/functions` | Optional (if using Netlify Functions) |
 
-4. **Update DNS Records** (at your domain registrar)
-   ```
-   Type    Name    Value
-   A       @       76.76.21.21 (Vercel's IP)
-   CNAME   www     cname.vercel-dns.com
-   ```
+##### Environment Variables
+
+Add these environment variables in Netlify dashboard:
+
+```env
+# API Configuration (if needed in frontend)
+VITE_API_BASE_URL=https://your-backend-url.railway.app
+
+# Optional: Analytics, tracking IDs
+VITE_GA_TRACKING_ID=your-google-analytics-id
+```
+
+**Note:** 
+- All environment variables for Vite must be prefixed with `VITE_`
+- Set scope to "All scopes"
+- Set deploy context to "All deploy contexts"
+
+##### Deploy Configuration Steps
+
+1. **Go to Netlify Dashboard**: https://app.netlify.com
+2. **Click "Add new site"** → "Import an existing project"
+3. **Connect to GitHub**: Authorize Netlify to access your repositories
+4. **Select Repository**: Choose `Muskaan786/ldoia`
+5. **Configure Build Settings**:
+   - Team: **Developer**
+   - Branch: **main**
+   - Base directory: **(leave empty)**
+   - Build command: **npm run build**
+   - Publish directory: **dist**
+6. **Click "Deploy site"**
+
+#### 4.3 Configure Custom Domain (ldoia.com)
+
+1. **In Netlify Dashboard**:
+   - Go to Site settings → Domain management
+   - Click "Add custom domain"
+   - Enter: `ldoia.com`
+   - Click "Verify" and "Add domain"
+
+2. **Add www subdomain**:
+   - Click "Add domain alias"
+   - Enter: `www.ldoia.com`
+
+3. **Enable HTTPS**:
+   - Netlify will auto-provision SSL certificate
+   - Wait 24-48 hours for DNS propagation
+
+#### 4.4 Update DNS Records
+
+**At your domain registrar (GoDaddy, Namecheap, etc.):**
+
+```
+Type    Name    Value                           TTL
+A       @       75.2.60.5                       3600
+CNAME   www     your-site-name.netlify.app      3600
+```
+
+**Or use Netlify DNS (Recommended):**
+- Go to Domain management → Netlify DNS
+- Follow instructions to update nameservers at your registrar
 
 ---
 
-### Step 5: Deploy Super Admin Panel
+### Step 5: Deploy Super Admin Panel to Netlify
 
-1. **Update API Endpoint**
+#### 5.1 Update API Endpoint
 
-   In `/super-admin/index.html` (or wherever API calls are made):
+In `/super-admin/index.html`, update API endpoint:
 
-   ```javascript
-   const API_BASE_URL = 'https://ldoia-backend-production.up.railway.app';
-   ```
+```javascript
+const API_BASE_URL = 'https://ldoia-backend-production.up.railway.app';
+```
 
-2. **Deploy to Vercel/Netlify**
+#### 5.2 Deploy Super Admin
 
-   **Option A: Vercel**
-   ```bash
-   cd super-admin
-   vercel --prod
-   ```
+**Option A: Deploy as Separate Site on Netlify**
 
-   **Option B: Netlify**
-   ```bash
-   # Install Netlify CLI
-   npm install -g netlify-cli
+1. **Create New Site on Netlify**:
+   - Click "Add new site" → "Import an existing project"
+   - Select `Muskaan786/ldoia` repository
+   - Configure:
+     - Team: **Developer**
+     - Branch: **main**
+     - Base directory: **super-admin**
+     - Build command: **(leave empty)** - static HTML
+     - Publish directory: **.** (current directory)
 
-   # Login
-   netlify login
-
-   # Deploy
-   cd super-admin
-   netlify deploy --prod --dir=.
-   ```
-
-3. **Configure Subdomain**
+2. **Configure Subdomain**:
+   - Go to Domain management
    - Add custom domain: `admin.ldoia.com`
-   - Update DNS:
-     ```
-     Type    Name     Value
-     CNAME   admin    cname.vercel-dns.com
-     ```
+   - Update DNS with CNAME record
+
+**Option B: Deploy to Netlify from CLI**
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login
+netlify login
+
+# Deploy super admin
+cd super-admin
+netlify deploy --prod --dir=.
+```
+
+#### 5.3 DNS Configuration for Subdomain
+
+Add this CNAME record at your domain registrar:
+
+```
+Type    Name     Value
+CNAME   admin    your-super-admin-site.netlify.app    3600
+```
 
 ---
 
@@ -348,18 +400,70 @@ app.use(cors({
 
 **At your domain registrar (e.g., GoDaddy, Namecheap):**
 
-```
-# Main Website
-Type    Name    Value                       TTL
-A       @       76.76.21.21                 3600
-CNAME   www     cname.vercel-dns.com        3600
+##### For Netlify Deployment:
 
-# Super Admin Subdomain
-CNAME   admin   your-vercel-deployment.vercel.app    3600
+```
+# Main Website (ldoia.com)
+Type    Name    Value                           TTL
+A       @       75.2.60.5                       3600
+CNAME   www     your-site-name.netlify.app      3600
+
+# Super Admin Subdomain (admin.ldoia.com)
+CNAME   admin   your-admin-site.netlify.app     3600
 
 # Email (if needed)
-MX      @       mail.ldoia.com              3600
+MX      @       mail.ldoia.com                  3600
 ```
+
+**Alternative: Use Netlify DNS (Recommended)**
+
+Instead of configuring individual records, you can use Netlify DNS:
+
+1. Go to Netlify Dashboard → Domain management
+2. Click "Use Netlify DNS"
+3. Copy the nameserver addresses provided
+4. Update nameservers at your domain registrar:
+   ```
+   dns1.p01.nsone.net
+   dns2.p01.nsone.net
+   dns3.p01.nsone.net
+   dns4.p01.nsone.net
+   ```
+5. Wait 24-48 hours for DNS propagation
+
+---
+
+## 📋 Quick Netlify Deployment Checklist
+
+Use this checklist when deploying to Netlify:
+
+### Main Website Deployment
+
+- [ ] Repository pushed to GitHub: `https://github.com/Muskaan786/ldoia.git`
+- [ ] Backend deployed and URL obtained
+- [ ] API endpoint updated in `/client/services/apiService.ts`
+- [ ] Netlify site created from repository
+- [ ] Build settings configured:
+  - [ ] Branch: `main`
+  - [ ] Build command: `npm run build`
+  - [ ] Publish directory: `dist`
+- [ ] Environment variables added (if any)
+- [ ] Custom domain `ldoia.com` added
+- [ ] DNS records configured
+- [ ] HTTPS/SSL certificate provisioned
+- [ ] Site tested and working
+
+### Super Admin Deployment
+
+- [ ] API endpoint updated in `/super-admin/index.html`
+- [ ] Separate Netlify site created for super-admin
+- [ ] Build settings configured:
+  - [ ] Branch: `main`
+  - [ ] Base directory: `super-admin`
+  - [ ] Publish directory: `.`
+- [ ] Subdomain `admin.ldoia.com` configured
+- [ ] DNS CNAME record added for admin subdomain
+- [ ] Admin panel tested and accessible
 
 ---
 
