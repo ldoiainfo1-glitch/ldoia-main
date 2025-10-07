@@ -117,14 +117,23 @@ function AdvisoryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-amber-600 bg-amber-100">
-            {/* Advisory Level 1-6 - Similar to Committee structure */}
+            {/* Advisory Level 1-15 - Similar to Committee structure */}
             {[
-              { position: "Advisory Level 1", designation: "Available", fee: 25000 },
-              { position: "Advisory Level 2", designation: "Available", fee: 50000 },
-              { position: "Advisory Level 3", designation: "Available", fee: 75000 },
-              { position: "Advisory Level 4", designation: "Available", fee: 100000 },
-              { position: "Advisory Level 5", designation: "Available", fee: 150000 },
-              { position: "Advisory Level 6", designation: "Available", fee: 200000 }
+              { position: "Advisory Level 1", designation: "Available" },
+              { position: "Advisory Level 2", designation: "Available" },
+              { position: "Advisory Level 3", designation: "Available" },
+              { position: "Advisory Level 4", designation: "Available" },
+              { position: "Advisory Level 5", designation: "Available" },
+              { position: "Advisory Level 6", designation: "Available" },
+              { position: "Advisory Level 7", designation: "Available" },
+              { position: "Advisory Level 8", designation: "Available" },
+              { position: "Advisory Level 9", designation: "Available" },
+              { position: "Advisory Level 10", designation: "Available" },
+              { position: "Advisory Level 11", designation: "Available" },
+              { position: "Advisory Level 12", designation: "Available" },
+              { position: "Advisory Level 13", designation: "Available" },
+              { position: "Advisory Level 14", designation: "Available" },
+              { position: "Advisory Level 15", designation: "Available" }
             ].map((item, index) => {
               const positionKey = getApplicationKey(item.position);
               const app = applications[positionKey];
@@ -152,7 +161,7 @@ function AdvisoryTable({
                         onClick={() => handleAdvisoryApplyClick(item.position)}
                         className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-xs px-3 py-1"
                       >
-                        Apply (₹{item.fee.toLocaleString()})
+                        Apply Now
                       </Button>
                     )}
                   </td>
