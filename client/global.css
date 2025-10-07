@@ -1,0 +1,279 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.8s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 1s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, 
+             transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d69e2e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b7791f;
+}
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    /* Light theme by default */
+    --background: 43 96% 96%;
+    --foreground: 20 14% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 4%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 4%;
+    
+    --primary: 24 9% 10%;
+    --primary-foreground: 60 9% 98%;
+    
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9% 10%;
+    
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+    
+    --accent: 60 4.8% 95.9%;
+    --accent-foreground: 24 9% 10%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9% 98%;
+
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 20 14% 4%;
+    
+    --radius: 0.5rem;
+
+    /* LDOAI Custom Colors */
+    --ldoai-amber: 43 96% 56%;
+    --ldoai-orange: 24 95% 53%;
+    --ldoai-brown: 20 14% 4%;
+  }
+
+  .dark {
+    --background: 20 14% 4%;
+    --foreground: 60 9% 98%;
+
+    --card: 20 14% 4%;
+    --card-foreground: 60 9% 98%;
+    
+    --popover: 20 14% 4%;
+    --popover-foreground: 60 9% 98%;
+    
+    --primary: 60 9% 98%;
+    --primary-foreground: 20 14% 4%;
+    
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9% 98%;
+    
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9% 98%;
+
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 24 5.7% 82.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom gradient backgrounds */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  /* Glow effects for interactive elements */
+  .glow-primary {
+    box-shadow: 0 0 20px hsla(var(--ldoai-blue), 0.3);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px hsla(var(--ldoai-purple), 0.3);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent));
+  }
+}
+
+
+/* Ensure sticky sections work properly */
+.sticky {
+  position: sticky !important;
+}
+
+/* Remove all gaps and margins */
+header,
+section {
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+}
+
+/* Ensure no gaps between sections */
+header + section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+section + section {
+  margin-top: 0 !important;
+}
+
+/* Remove any default spacing */
+* {
+  box-sizing: border-box;
+}
+
+/* Override any framework defaults */
+.container {
+  margin-top: 0 !important;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
