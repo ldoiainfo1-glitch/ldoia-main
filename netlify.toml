@@ -1,0 +1,59 @@
+# Netlify Configuration for LDOIA Main Website
+# Repository: https://github.com/Muskaan786/ldoia.git
+# Team: Developer
+# Branch: main
+
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Publish directory (where your built files are)
+  publish = "dist/spa"
+  
+  # Functions directory (optional)
+  functions = "netlify/functions"
+
+# Build environment
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# Production context: all deploys from the main branch
+[context.production]
+  command = "npm run build"
+  publish = "dist"
+
+# Deploy preview context: all deploys from pull requests
+[context.deploy-preview]
+  command = "npm run build"
+  publish = "dist"
+
+# Branch deploy context: all deploys from branches other than main
+[context.branch-deploy]
+  command = "npm run build"
+  publish = "dist"
+
+# Redirects and rewrites
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Plugin configuration (optional)
+# [[plugins]]
+#   package = "@netlify/plugin-lighthouse"
