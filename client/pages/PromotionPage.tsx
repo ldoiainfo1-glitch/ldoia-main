@@ -66,8 +66,11 @@ export default function PromotionPage() {
       const data = await response.json();
       
       console.log('📊 Fetched promotion data:', data);
+      console.log('📊 Number of records:', data.records?.length);
+      console.log('📊 First record:', data.records?.[0]);
       
       if (data.success) {
+        console.log('✅ Setting promotion records:', data.records);
         setPromotionRecords(data.records);
       } else {
         console.error('Failed to fetch promotion records:', data.error);
@@ -206,7 +209,7 @@ export default function PromotionPage() {
                           {record.srNo}
                         </td>
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                          {memberId ? memberName || 'Member' : record.displayDate}
+                          {memberId ? (memberName || 'Member') : record.displayDate}
                         </td>
                         {memberId && (
                           <td className="px-4 py-3 text-sm text-gray-900">
@@ -216,40 +219,46 @@ export default function PromotionPage() {
                         <td className="px-4 py-3 text-sm text-gray-900">
                           {record.displayDate}
                         </td>
-                        {LANGUAGES.map((lang) => (
-                          <td
-                            key={lang.key}
-                            className="px-4 py-3 text-center"
-                          >
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className={
-                                record.availableLanguages[lang.key as keyof typeof record.availableLanguages]
-                                  ? "bg-green-50 hover:bg-green-100 border-green-300 text-green-700 gap-1"
-                                  : "bg-gray-50 border-gray-300 text-gray-400 gap-1 cursor-not-allowed opacity-50"
-                              }
-                              onClick={() =>
-                                record.availableLanguages[lang.key as keyof typeof record.availableLanguages] &&
-                                handleDownloadPromotion(record.date, lang.key)
-                              }
-                              disabled={
-                                !memberId || 
-                                !record.availableLanguages[lang.key as keyof typeof record.availableLanguages] ||
-                                isDownloading === `${record.date}-${lang.key}`
-                              }
+                        {LANGUAGES.map((lang) => {
+                          const isAvailable = record.availableLanguages[lang.key as keyof typeof record.availableLanguages];
+                          const isCurrentDownloading = isDownloading === `${record.date}-${lang.key}`;
+                          
+                          return (
+                            <td
+                              key={lang.key}
+                              className="px-4 py-3 text-center"
                             >
-                              {isDownloading === `${record.date}-${lang.key}` ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                              ) : (
-                                <>
-                                  <Download className="h-3 w-3" />
-                                  <span className="hidden sm:inline">Download</span>
-                                </>
-                              )}
-                            </Button>
-                          </td>
-                        ))}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className={
+                                  isAvailable
+                                    ? "bg-green-50 hover:bg-green-100 border-green-300 text-green-700 gap-1"
+                                    : "bg-gray-50 border-gray-300 text-gray-400 gap-1 cursor-not-allowed opacity-50"
+                                }
+                                onClick={() => {
+                                  if (isAvailable && memberId) {
+                                    handleDownloadPromotion(record.date, lang.key);
+                                  }
+                                }}
+                                disabled={
+                                  !memberId || 
+                                  !isAvailable ||
+                                  isCurrentDownloading
+                                }
+                              >
+                                {isCurrentDownloading ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                ) : (
+                                  <>
+                                    <Download className="h-3 w-3" />
+                                    <span className="hidden sm:inline">Download</span>
+                                  </>
+                                )}
+                              </Button>
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))
                   )}
