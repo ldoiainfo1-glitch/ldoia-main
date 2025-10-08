@@ -89,8 +89,8 @@ export default function IDCard({ member, onClose }: IDCardProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1000] p-4">
-      <div className="bg-white rounded-lg max-w-3xl w-full p-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-start justify-center z-[1000] p-4 pt-8 overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-3xl w-full p-4 my-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-bold text-gray-900">Member ID Card</h3>
           <Button

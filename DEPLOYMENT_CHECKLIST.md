@@ -1,4 +1,26 @@
-# 🚀 LDOIA Production Deployment Checklist
+# 🚀 Deployment Checklist - October 8, 2025 (Updated 4:45 PM)
+
+## ✅ Completed Changes
+
+### 1. Dropdown Positioning Fix ✅ NEW
+- **Fixed:** Actions dropdown now appears **below** the button (not above)
+- **Files Changed:** `client/components/CommitteeTable.tsx`
+- **Changes:**
+  - Line ~238: Changed `bottom-8` to `top-full mt-1`
+  - Line ~446: Changed `bottom-8` to `top-full mt-1`
+  - Updated animation from `slide-in-from-bottom-2` to `slide-in-from-top-2`
+
+### 2. Server Startup Log Fix ✅ NEW
+- **Fixed:** Production URLs now shown in logs instead of localhost
+- **File Changed:** `ldoia-backend/server-registrations.cjs`
+- **Now Shows:**
+  ```
+  🚀 LDOIA Registration Server running on port 3001
+  🌍 Environment: PRODUCTION
+  📊 Health check: https://ldoia.onrender.com/api/health
+  📝 Registrations API: https://ldoia.onrender.com/api/registrations
+  🎨 Promotion API: https://ldoia.onrender.com/api/promotion-records
+  ```
 
 ## ✅ Pre-Deployment Checklist
 
