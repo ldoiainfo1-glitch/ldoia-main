@@ -1,4 +1,5 @@
 // API functions for MongoDB integration
+// Updated: Using VITE_BACKEND_API_URL from Netlify environment variables
 const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 
   (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api');
 

@@ -132,7 +132,8 @@ If manual config doesn't work:
 
 ---
 
-**Status:** Waiting for you to update Render settings ⏳
+**Status:** Environment variables configured ✅  
+**Last Updated:** October 8, 2025 at 4:21 PM
 
 ---
 

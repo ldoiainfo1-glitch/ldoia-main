@@ -21,7 +21,7 @@ Fill in these values in the Netlify dashboard:
 | **Branch to deploy** | `main` | Main production branch |
 | **Base directory** | (leave empty) | Root of repository |
 | **Build command** | `npm run build` | Vite build command |
-| **Publish directory** | `dist` | Vite output folder |
+| **Publish directory** | `dist/spa` | Vite output folder (SPA mode) |
 | **Functions directory** | `netlify/functions` | Optional, can leave default |
 
 ---
@@ -105,7 +105,7 @@ In the configuration screen, fill in:
 #### Build Settings
 - **Base directory:** (leave empty)
 - **Build command:** `npm run build`
-- **Publish directory:** `dist`
+- **Publish directory:** `dist/spa`
 - **Functions directory:** `netlify/functions` (or leave default)
 
 #### Environment Variables (Optional)
