@@ -2142,7 +2142,8 @@ app.delete('/api/promotions/images/:id', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Detect production environment (Render sets RENDER=true)
+  const isProduction = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
   const baseUrl = isProduction 
     ? 'https://ldoia.onrender.com' 
     : `http://localhost:${PORT}`;
