@@ -2151,9 +2151,16 @@ app.delete('/api/promotions/images/:id', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const baseUrl = isProduction 
+    ? 'https://ldoia.onrender.com' 
+    : `http://localhost:${PORT}`;
+  
   console.log(`🚀 LDOIA Registration Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📝 Registrations API: http://localhost:${PORT}/api/registrations`);
+  console.log(`🌍 Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  console.log(`📊 Health check: ${baseUrl}/api/health`);
+  console.log(`📝 Registrations API: ${baseUrl}/api/registrations`);
+  console.log(`🎨 Promotion API: ${baseUrl}/api/promotion-records`);
 });
 
 module.exports = app;

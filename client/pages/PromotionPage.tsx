@@ -59,7 +59,8 @@ export default function PromotionPage() {
   const fetchPromotionRecords = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/promotions/records');
+      const baseUrl = import.meta.env.VITE_BACKEND_API_URL || '/api';
+      const response = await fetch(`${baseUrl}/promotions/records`);
       const data = await response.json();
       
       console.log('📊 Fetched promotion data:', data);

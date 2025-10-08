@@ -239,7 +239,7 @@ export default function CommitteeTable(props: CommitteeTableProps) {
                           {app && app.status === 'approved' ? (
                             <>
                               {openDropdown === `india-position-${index + 1}` && (
-                                <div className="absolute bottom-8 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-30 min-w-[140px] animate-in slide-in-from-bottom-2 duration-200">
+                                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-30 min-w-[140px] animate-in slide-in-from-top-2 duration-200">
                                   <div className="py-1">
                                     <button
                                       className="w-full text-left px-3 py-2 text-sm hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-blue-700 rounded-md flex items-center gap-2 transition-all duration-200 font-medium border-b border-gray-100"
@@ -443,7 +443,7 @@ export default function CommitteeTable(props: CommitteeTableProps) {
                         {app ? (
                           <>
                             {openDropdown === `position-${index + 1}` && (
-                              <div className="absolute bottom-8 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-30 min-w-[140px] animate-in slide-in-from-bottom-2 duration-200">
+                              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-30 min-w-[140px] animate-in slide-in-from-top-2 duration-200">
                                 <div className="py-1">
                                   <button
                                     className="w-full text-left px-3 py-2 text-sm hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-blue-700 rounded-md flex items-center gap-2 transition-all duration-200 font-medium border-b border-gray-100"
