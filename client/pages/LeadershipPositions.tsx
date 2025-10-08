@@ -30,8 +30,8 @@ export default function LeadershipPositions() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const apiUrl = import.meta.env.PROD 
-          ? '/.netlify/functions/applications' 
+        const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
           : 'http://localhost:3001/api/applications';
 
         // Load all applications to build positions

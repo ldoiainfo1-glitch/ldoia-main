@@ -329,8 +329,8 @@ export default function Index() {
         setIsLoadingApplications(true);
         
         // Use environment-based API URL
-        const apiUrl = import.meta.env.PROD 
-          ? '/.netlify/functions/applications' 
+        const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
           : 'http://localhost:3001/api/applications';
 
         console.log('📡 Loading applications from:', apiUrl);
@@ -426,8 +426,8 @@ export default function Index() {
     // Load candidate applications for the admin panel
     const loadCandidateApplications = async () => {
       try {
-        const apiUrl = import.meta.env.PROD 
-          ? '/.netlify/functions/applications' 
+        const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
           : 'http://localhost:3001/api/applications';
 
         const response = await fetch(apiUrl);
@@ -468,8 +468,8 @@ export default function Index() {
         setIsCommitteeLoading(true);
         
         // Load ALL applications from MongoDB (pending + approved)
-        const apiUrl = import.meta.env.PROD 
-          ? '/.netlify/functions/applications' 
+        const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
           : 'http://localhost:3001/api/applications';
         
         const response = await fetch(apiUrl);
@@ -918,8 +918,8 @@ export default function Index() {
     
     try {
       // Try to send via SMS API (you can integrate with services like Twilio, AWS SNS, etc.)
-      const smsApiUrl = import.meta.env.PROD 
-        ? '/.netlify/functions/send-sms' 
+      const smsApiUrl = import.meta.env.VITE_BACKEND_API_URL 
+        ? `${import.meta.env.VITE_BACKEND_API_URL}/send-sms`
         : 'http://localhost:3001/api/send-sms';
 
       const smsResponse = await fetch(smsApiUrl, {
@@ -1198,8 +1198,8 @@ export default function Index() {
       console.log('Submitting application to MongoDB...');
 
       // Submit application via MongoDB API
-      const apiUrl = import.meta.env.PROD 
-        ? '/.netlify/functions/applications' 
+      const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
         : 'http://localhost:3001/api/applications';
 
       const response = await fetch(apiUrl, {
@@ -1626,8 +1626,8 @@ export default function Index() {
     
     try {
       // Try to send via SMS API
-      const smsApiUrl = import.meta.env.PROD 
-        ? '/.netlify/functions/send-sms' 
+      const smsApiUrl = import.meta.env.VITE_BACKEND_API_URL 
+        ? `${import.meta.env.VITE_BACKEND_API_URL}/send-sms`
         : 'http://localhost:3001/api/send-sms';
 
       const smsResponse = await fetch(smsApiUrl, {
@@ -1840,8 +1840,8 @@ export default function Index() {
     
     try {
       // Fetch real documents from MongoDB
-      const apiUrl = import.meta.env.PROD 
-        ? '/.netlify/functions/applications' 
+      const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
         : 'http://localhost:3001/api/applications';
       
       const response = await fetch(`${apiUrl}/${candidate._id || candidate.application_id}/documents`);
@@ -1880,8 +1880,8 @@ export default function Index() {
     // Update candidate status in MongoDB and local state
     try {
       // In production, update MongoDB first
-      const apiUrl = import.meta.env.PROD 
-        ? '/.netlify/functions/applications' 
+      const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
+          ? `${import.meta.env.VITE_BACKEND_API_URL}/applications`
         : 'http://localhost:3001/api/applications';
       
       const response = await fetch(`${apiUrl}/${candidate.application_id}/status`, {
