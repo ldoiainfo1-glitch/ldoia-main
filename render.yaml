@@ -10,7 +10,7 @@ services:
     plan: free  # Change to 'starter' for production ($7/month)
     branch: main
     rootDir: ldoia-backend
-    buildCommand: npm install
+    buildCommand: npm install --production=false
     startCommand: node server-registrations.cjs
     envVars:
       - key: NODE_ENV
