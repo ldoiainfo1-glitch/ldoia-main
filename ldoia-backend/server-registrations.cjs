@@ -1697,70 +1697,61 @@ app.get('/api/debug/applications', async (req, res) => {
 // Get all promotion records with available languages
 app.get('/api/promotions/records', async (req, res) => {
   try {
-    // Fetch from BOTH committee and advisory collections
-    const committeeApps = await getCommitteeApplicationsCollection();
-    const advisoryApps = await getAdvisoryApplicationsCollection();
     const promotionImages = await getPromotionImagesCollection();
     
-    // Debug: Check total count
-    const committeeTotal = await committeeApps.countDocuments({});
-    const committeeApproved = await committeeApps.countDocuments({ application_status: 'approved' });
-    const advisoryTotal = await advisoryApps.countDocuments({});
-    const advisoryApproved = await advisoryApps.countDocuments({ application_status: 'approved' });
+    // Get all promotion images grouped by upload date
+    const images = await promotionImages.find({}).sort({ uploadDate: -1 }).toArray();
     
-    console.log(`📊 Committee - Total: ${committeeTotal}, Approved: ${committeeApproved}`);
-    console.log(`📊 Advisory - Total: ${advisoryTotal}, Approved: ${advisoryApproved}`);
+    console.log(`📊 Found ${images.length} promotion images`);
     
-    // Get all approved applications from BOTH collections
-    const committeeMembers = await committeeApps.find({ application_status: 'approved' }).toArray();
-    const advisoryMembers = await advisoryApps.find({ application_status: 'approved' }).toArray();
+    // Group images by date
+    const recordsByDate = {};
     
-    // Combine both arrays
-    const allMembers = [...committeeMembers, ...advisoryMembers];
-    
-    console.log(`✅ Found ${committeeMembers.length} committee + ${advisoryMembers.length} advisory = ${allMembers.length} total approved members`);
-    
-    // Get all promotion images
-    const images = await promotionImages.find({}).toArray();
-    
-    // Create a map of available images by language and date
-    const imageMap = {};
     images.forEach(img => {
-      const dateKey = new Date(img.uploadDate).toISOString().split('T')[0];
-      if (!imageMap[dateKey]) {
-        imageMap[dateKey] = new Set();
-      }
-      imageMap[dateKey].add(img.language);
-    });
-    
-    // Build promotion records
-    const promotionRecords = allMembers.map(member => {
-      const memberDate = new Date(member.applied_date || member.created_at || member.updated_at).toISOString().split('T')[0];
-      const availableLanguages = imageMap[memberDate] || new Set();
+      const uploadDate = new Date(img.uploadDate);
+      const dateKey = uploadDate.toISOString().split('T')[0]; // YYYY-MM-DD format
       
-      return {
-        _id: member._id.toString(),
-        name: member.applicant_name || member.name,
-        phone: member.phone_number || member.phone,
-        date: memberDate,
-        photo: member.photo_data ? `data:${member.photo_mimetype};base64,${member.photo_data}` : null,
-        location: member.location_details || {},
-        availableLanguages: {
-          hindi: availableLanguages.has('hindi'),
-          english: availableLanguages.has('english'),
-          marathi: availableLanguages.has('marathi'),
-          gujarati: availableLanguages.has('gujarati'),
-          tamil: availableLanguages.has('tamil'),
-          telugu: availableLanguages.has('telugu'),
-          kannada: availableLanguages.has('kannada'),
-          bengali: availableLanguages.has('bengali'),
-          odia: availableLanguages.has('odia'),
-          urdu: availableLanguages.has('urdu')
-        }
-      };
+      if (!recordsByDate[dateKey]) {
+        recordsByDate[dateKey] = {
+          date: dateKey,
+          uploadDate: uploadDate,
+          languages: {},
+          imageIds: {}
+        };
+      }
+      
+      // Mark language as available and store image ID
+      recordsByDate[dateKey].languages[img.language.toLowerCase()] = true;
+      recordsByDate[dateKey].imageIds[img.language.toLowerCase()] = img._id.toString();
     });
     
-    console.log(`📊 Fetched ${promotionRecords.length} promotion records (${committeeMembers.length} committee + ${advisoryMembers.length} advisory)`);
+    // Convert to array and sort by date (newest first)
+    const promotionRecords = Object.values(recordsByDate)
+      .sort((a, b) => b.uploadDate - a.uploadDate)
+      .map((record, index) => ({
+        srNo: index + 1,
+        date: record.date,
+        displayDate: new Date(record.date).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        availableLanguages: {
+          hindi: record.languages['hindi'] || false,
+          english: record.languages['english'] || false,
+          marathi: record.languages['marathi'] || false,
+          gujarati: record.languages['gujarati'] || false,
+          tamil: record.languages['tamil'] || false,
+          telugu: record.languages['telugu'] || false,
+          kannada: record.languages['kannada'] || false,
+          bengali: record.languages['bengali'] || false,
+          odia: record.languages['odia'] || false,
+          urdu: record.languages['urdu'] || false
+        },
+        imageIds: record.imageIds
+      }));
+    
+    console.log(`✅ Grouped into ${promotionRecords.length} promotion dates`);
     
     res.json({
       success: true,

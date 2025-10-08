@@ -272,15 +272,11 @@ export default function CommitteeTable(props: CommitteeTableProps) {
                                       className="w-full text-left px-3 py-2 text-sm hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100 text-orange-700 rounded-md flex items-center gap-2 transition-all duration-200 font-medium"
                                       onClick={() => {
                                         console.log('🎯 Promotion clicked for app:', app);
-                                        console.log('🎯 Available ID fields:', {
-                                          _id: app._id,
-                                          id: app.id,
-                                          applicationId: app.application_id,
-                                          objectId: app.objectId
-                                        });
                                         const memberId = app._id || app.id || app.application_id || app.objectId;
-                                        console.log('🎯 Using memberId:', memberId);
-                                        navigate(`/promotion?memberId=${memberId}`);
+                                        const memberName = app.name || app.applicant_name || 'Member';
+                                        const memberPhone = app.phone || app.phone_number || '';
+                                        console.log('🎯 Using memberId:', memberId, 'name:', memberName);
+                                        navigate(`/promotion?memberId=${memberId}&name=${encodeURIComponent(memberName)}&phone=${memberPhone}`);
                                         setOpenDropdown('');
                                       }}
                                     >
@@ -477,8 +473,10 @@ export default function CommitteeTable(props: CommitteeTableProps) {
                                     onClick={() => {
                                       console.log('🎯 Promotion clicked for app:', app);
                                       const memberId = app._id || app.id || app.application_id || app.objectId;
-                                      console.log('🎯 Using memberId:', memberId);
-                                      navigate(`/promotion?memberId=${memberId}`);
+                                      const memberName = app.name || app.applicant_name || 'Member';
+                                      const memberPhone = app.phone || app.phone_number || '';
+                                      console.log('🎯 Using memberId:', memberId, 'name:', memberName);
+                                      navigate(`/promotion?memberId=${memberId}&name=${encodeURIComponent(memberName)}&phone=${memberPhone}`);
                                       setOpenDropdown('');
                                     }}
                                   >
