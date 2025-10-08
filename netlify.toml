@@ -8,7 +8,7 @@
   command = "npm run build"
   
   # Publish directory (where your built files are)
-  publish = "dist/spa"
+  publish = "dist"
   
   # Functions directory (optional)
   functions = "netlify/functions"

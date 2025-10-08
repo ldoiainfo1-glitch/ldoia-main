@@ -1,0 +1,57 @@
+# Render Blueprint for LDOIA Backend
+# This file allows one-click deployment to Render.com
+
+services:
+  # Backend API Service
+  - type: web
+    name: ldoia-backend
+    runtime: node
+    region: singapore
+    plan: free  # Change to 'starter' for production ($7/month)
+    branch: main
+    rootDir: ldoia-backend
+    buildCommand: npm install
+    startCommand: node server-registrations.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGODB_URI
+        sync: false  # Set manually in Render dashboard for security
+      - key: JWT_SECRET
+        generateValue: true  # Render will auto-generate a secure secret
+      - key: FRONTEND_URL
+        sync: false  # Update after Netlify deployment
+      - key: ADMIN_FRONTEND_URL
+        sync: false  # Update after Netlify deployment
+      - key: FAST2SMS_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: FAST2SMS_SENDER_ID
+        value: LDOIA
+      - key: OTP_PROVIDER
+        value: fast2sms
+      - key: OTP_EXPIRY_MINUTES
+        value: 10
+      - key: OTP_MAX_ATTEMPTS
+        value: 3
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false  # Set manually in Render dashboard
+      - key: SMTP_PASS
+        sync: false  # Set manually in Render dashboard
+      - key: RAZORPAY_KEY_ID
+        sync: false  # Set manually in Render dashboard
+      - key: RAZORPAY_KEY_SECRET
+        sync: false  # Set manually in Render dashboard
+      - key: PAYMENT_CURRENCY
+        value: INR
+      - key: MAX_FILE_SIZE_MB
+        value: 10
+      - key: ALLOWED_FILE_TYPES
+        value: jpeg,jpg,png,pdf
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
