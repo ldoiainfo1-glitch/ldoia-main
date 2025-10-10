@@ -108,7 +108,7 @@ export default function IDCard({ member, onClose }: IDCardProps) {
 
         {/* ID Card Design */}
         <div ref={cardRef} className="w-full bg-white">
-          <div className="flex flex-row" style={{ minHeight: '280px', maxHeight: '350px' }}>
+          <div className="flex flex-row" style={{ minHeight: '420px', maxHeight: '525px' }}>
             {/* Left Side - Black */}
             <div className="w-1/2 bg-black text-white flex flex-col">
               {/* Top Section - Logo and Title */}
