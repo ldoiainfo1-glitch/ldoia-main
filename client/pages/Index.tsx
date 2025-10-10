@@ -22,6 +22,7 @@ interface CommitteeMember {
   id: number | string;
   name: string;
   phone: string;
+  email?: string;
   post?: string;
   company?: string;
   designation?: string;
@@ -183,12 +184,6 @@ export default function Index() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState("");
 
-  // Referral Autocomplete state
-  const [referralSuggestions, setReferralSuggestions] = useState<Array<{name: string, phone: string, id: string}>>([]);
-  const [showReferralDropdown, setShowReferralDropdown] = useState(false);
-  const [selectedReferral, setSelectedReferral] = useState<{name: string, phone: string, id: string} | null>(null);
-  const [referralSearchValue, setReferralSearchValue] = useState("");
-
   // Edit functionality state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editMemberData, setEditMemberData] = useState({
@@ -202,6 +197,7 @@ export default function Index() {
     firstName: "",
     lastName: "",
     phone: "",
+    email: "",
     photo: null as File | null,
     company: "",
     designation: "",
@@ -326,21 +322,6 @@ export default function Index() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [openDropdown]);
-
-  // Close referral dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showReferralDropdown && !target.closest('.referral-autocomplete-container')) {
-        setShowReferralDropdown(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [showReferralDropdown]);
 
   // 🌍 Load zones when country is selected (or on mount)
   useEffect(() => {
@@ -492,9 +473,8 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from division:', parents);
-            // Only set if not already set
-            setSelectedZone(prev => prev || parents.zone || '');
-            setSelectedState(prev => prev || parents.state || '');
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -509,10 +489,9 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from district:', parents);
-            // Only set if not already set
-            setSelectedZone(prev => prev || parents.zone || '');
-            setSelectedState(prev => prev || parents.state || '');
-            setSelectedDiv(prev => prev || parents.division || '');
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -527,11 +506,10 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from tehsil:', parents);
-            // Only set if not already set
-            setSelectedZone(prev => prev || parents.zone || '');
-            setSelectedState(prev => prev || parents.state || '');
-            setSelectedDiv(prev => prev || parents.division || '');
-            setSelectedDistrict(prev => prev || parents.district || '');
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -546,12 +524,11 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from pincode:', parents);
-            // Only set if not already set - use functional setState to avoid overwriting
-            setSelectedZone(prev => prev || parents.zone || '');
-            setSelectedState(prev => prev || parents.state || '');
-            setSelectedDiv(prev => prev || parents.division || '');
-            setSelectedDistrict(prev => prev || parents.district || '');
-            setSelectedTehsil(prev => prev || parents.taluka || '');
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
+            if (parents.taluka && !selectedTehsil) setSelectedTehsil(parents.taluka);
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -1210,50 +1187,6 @@ export default function Index() {
     }
   };
 
-  // Referral Code Autocomplete Functions
-  const searchReferralMembers = async (searchText: string) => {
-    // Only search if at least 2 digits entered
-    if (searchText.length < 2) {
-      setReferralSuggestions([]);
-      setShowReferralDropdown(false);
-      return;
-    }
-
-    try {
-      const apiUrl = import.meta.env.VITE_BACKEND_API_URL 
-        ? `${import.meta.env.VITE_BACKEND_API_URL}/search-referrals`
-        : 'http://localhost:3001/api/search-referrals';
-
-      const response = await fetch(`${apiUrl}?search=${searchText}`);
-      if (response.ok) {
-        const data = await response.json();
-        setReferralSuggestions(data.members || []);
-        setShowReferralDropdown(data.members && data.members.length > 0);
-      } else {
-        setReferralSuggestions([]);
-        setShowReferralDropdown(false);
-      }
-    } catch (error) {
-      console.error('Error searching referrals:', error);
-      setReferralSuggestions([]);
-      setShowReferralDropdown(false);
-    }
-  };
-
-  const handleReferralInputChange = (value: string) => {
-    setReferralSearchValue(value);
-    setSelectedReferral(null);
-    setApplicationData(prev => ({ ...prev, referralCode: value }));
-    searchReferralMembers(value);
-  };
-
-  const handleReferralSelect = (member: {name: string, phone: string, id: string}) => {
-    setSelectedReferral(member);
-    setReferralSearchValue(`${member.name} - ${member.phone}`);
-    setApplicationData(prev => ({ ...prev, referralCode: member.phone }));
-    setShowReferralDropdown(false);
-  };
-
   // Application handling functions
   const handleApplyClick = (position: string) => {
     setApplicationPosition(position);
@@ -1340,8 +1273,23 @@ export default function Index() {
       return;
     }
 
+    if (!applicationData.email) {
+      alert("Email Address is mandatory");
+      return;
+    }
+
     if (!applicationData.phone) {
       alert("Phone Number is mandatory");
+      return;
+    }
+
+    if (applicationData.phone.length !== 10) {
+      alert("Phone Number must be exactly 10 digits");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(applicationData.phone)) {
+      alert("Phone Number must contain only digits");
       return;
     }
 
@@ -1366,9 +1314,8 @@ export default function Index() {
       return;
     }
 
-    // Validate referral code was selected from autocomplete (if provided)
-    if (applicationData.referralCode && !selectedReferral) {
-      alert("⚠️ Invalid Referral Number\n\nPlease select a valid member from the autocomplete dropdown.\nThe referral number must match an existing LDOIA member.");
+    if (!applicationData.idProof || !applicationData.addressProof || !applicationData.panCard) {
+      alert("Please upload all required documents: ID Proof, Address Proof, and PAN Card");
       return;
     }
 
@@ -1669,6 +1616,11 @@ export default function Index() {
       return;
     }
 
+    if (!applicationData.email) {
+      alert("Email Address is mandatory");
+      return;
+    }
+
     if (!applicationData.phone) {
       alert("Phone Number is mandatory");
       return;
@@ -1816,6 +1768,7 @@ export default function Index() {
       firstName: "",
       lastName: "",
       phone: "",
+      email: "",
       photo: null,
       company: "",
       designation: "",
@@ -1868,6 +1821,7 @@ export default function Index() {
         firstName: member.name.split(' ')[0] || '',
         lastName: member.name.split(' ').slice(1).join(' ') || '',
         phone: member.phone,
+        email: member.email || '',
         company: member.company || '',
         designation: member.designation || '',
         completeAddress: member.completeAddress || ''
@@ -2044,8 +1998,8 @@ export default function Index() {
       return;
     }
     
-    if (!editMemberData.phone) {
-      alert("Please fill in Phone Number");
+    if (!editMemberData.phone || !editMemberData.email) {
+      alert("Please fill in Phone and Email");
       return;
     }
     
@@ -2060,6 +2014,7 @@ export default function Index() {
       firstName: editMemberData.firstName,
       lastName: editMemberData.lastName,
       phone: editMemberData.phone,
+      email: editMemberData.email,
       company: editMemberData.company,
       designation: editMemberData.designation,
       completeAddress: editMemberData.completeAddress,
@@ -2071,6 +2026,7 @@ export default function Index() {
     const updatedMemberData = {
       name: `${editMemberData.firstName} ${editMemberData.lastName}`,
       phone: editMemberData.phone,
+      email: editMemberData.email,
       company: editMemberData.company,
       designation: editMemberData.designation,
       completeAddress: editMemberData.completeAddress,
@@ -3845,7 +3801,11 @@ const getPositionLevel = () => {
                       value={applicationData.firstName}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, firstName: e.target.value }))}
                       placeholder="Enter your first name"
+                      className={!applicationData.firstName ? 'border-red-300 focus:border-red-500' : ''}
                     />
+                    {!applicationData.firstName && (
+                      <p className="text-xs text-red-500 mt-1">This field is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Last Name <span className="text-red-500">*</span></label>
@@ -3853,16 +3813,39 @@ const getPositionLevel = () => {
                       value={applicationData.lastName}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, lastName: e.target.value }))}
                       placeholder="Enter your last name"
+                      className={!applicationData.lastName ? 'border-red-300 focus:border-red-500' : ''}
+                    />
+                    {!applicationData.lastName && (
+                      <p className="text-xs text-red-500 mt-1">This field is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email Address <span className="text-red-500">*</span></label>
+                    <Input
+                      type="email"
+                      value={applicationData.email}
+                      onChange={(e) => setApplicationData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Enter your email address"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Phone Number <span className="text-red-500">*</span></label>
                     <Input
+                      type="tel"
                       value={applicationData.phone}
-                      onChange={(e) => setApplicationData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Enter your phone number"
-                      className="w-full"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                        if (value.length <= 10) {
+                          setApplicationData(prev => ({ ...prev, phone: value }));
+                        }
+                      }}
+                      placeholder="Enter 10 digit mobile number"
+                      maxLength={10}
+                      className={`w-full ${!applicationData.phone || applicationData.phone.length !== 10 ? 'border-red-300 focus:border-red-500' : 'border-green-300'}`}
                     />
+                    {applicationData.phone && applicationData.phone.length !== 10 && (
+                      <p className="text-xs text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                    )}
                     {/* OTP verification disabled for now - will be implemented in future */}
                     {/* <div className="flex gap-2">
                       <Button
@@ -3921,7 +3904,11 @@ const getPositionLevel = () => {
                       value={applicationData.company}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, company: e.target.value }))}
                       placeholder="Enter your company/organization name"
+                      className={!applicationData.company ? 'border-red-300 focus:border-red-500' : ''}
                     />
+                    {!applicationData.company && (
+                      <p className="text-xs text-red-500 mt-1">This field is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Designation <span className="text-red-500">*</span></label>
@@ -3929,7 +3916,11 @@ const getPositionLevel = () => {
                       value={applicationData.designation}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, designation: e.target.value }))}
                       placeholder="Enter your designation"
+                      className={!applicationData.designation ? 'border-red-300 focus:border-red-500' : ''}
                     />
+                    {!applicationData.designation && (
+                      <p className="text-xs text-red-500 mt-1">This field is required</p>
+                    )}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-1">Years of Experience</label>
@@ -3953,56 +3944,17 @@ const getPositionLevel = () => {
               {/* Referral Information */}
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                 <h4 className="text-lg font-semibold text-purple-900 mb-2">Referral Information</h4>
-                <p className="text-sm text-purple-700 mb-4">Enter referral mobile number if you have one (Optional)</p>
-                <div className="relative referral-autocomplete-container">
-                  <label className="block text-sm font-medium mb-1 text-purple-800">Referral Mobile Number</label>
+                <p className="text-sm text-purple-700 mb-4">Enter referral code if you have one (Optional)</p>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-purple-800">Referral Code</label>
                   <Input
-                    value={referralSearchValue}
-                    onChange={(e) => handleReferralInputChange(e.target.value)}
-                    placeholder="Start typing mobile number (min 2 digits)"
+                    value={applicationData.referralCode || ''}
+                    onChange={(e) => setApplicationData(prev => ({ ...prev, referralCode: e.target.value }))}
+                    placeholder="Enter referral code (optional)"
                     className="border-purple-300 focus:border-purple-500"
-                    onFocus={() => {
-                      if (referralSuggestions.length > 0) {
-                        setShowReferralDropdown(true);
-                      }
-                    }}
                   />
-                  
-                  {/* Autocomplete Dropdown */}
-                  {showReferralDropdown && referralSuggestions.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-purple-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {referralSuggestions.map((member, index) => (
-                        <div
-                          key={member.id || index}
-                          onClick={() => handleReferralSelect(member)}
-                          className="px-4 py-3 hover:bg-purple-100 cursor-pointer border-b border-purple-100 last:border-b-0 transition-colors"
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-semibold text-purple-900">{member.name}</p>
-                              <p className="text-sm text-purple-600">Mobile: {member.phone}</p>
-                            </div>
-                            <div className="text-purple-600">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {selectedReferral && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-800">
-                        ✓ Selected Referral: <strong>{selectedReferral.name}</strong> ({selectedReferral.phone})
-                      </p>
-                    </div>
-                  )}
-                  
                   <p className="text-xs text-purple-600 mt-1">
-                    Enter an existing LDOIA member's mobile number to get priority processing
+                    Get this code from an existing LDOIA member to get priority processing
                   </p>
                 </div>
               </div>
@@ -4080,7 +4032,7 @@ const getPositionLevel = () => {
                 <p className="text-sm text-gray-600 mb-4">Upload required documents for verification</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">ID Proof (Aadhaar/Passport)</label>
+                    <label className="block text-sm font-medium mb-1">ID Proof (Aadhaar/Passport) <span className="text-red-500">*</span></label>
                     <Input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
@@ -4092,7 +4044,7 @@ const getPositionLevel = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Address Proof</label>
+                    <label className="block text-sm font-medium mb-1">Address Proof <span className="text-red-500">*</span></label>
                     <Input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
@@ -4104,7 +4056,7 @@ const getPositionLevel = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">PAN Card</label>
+                    <label className="block text-sm font-medium mb-1">PAN Card <span className="text-red-500">*</span></label>
                     <Input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
@@ -4281,6 +4233,16 @@ const getPositionLevel = () => {
                         onChange={(e) => setEditMemberData(prev => ({ ...prev, phone: e.target.value }))}
                         disabled={!isEditOtpVerified}
                         placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Email</label>
+                      <Input
+                        type="email"
+                        value={editMemberData.email}
+                        onChange={(e) => setEditMemberData(prev => ({ ...prev, email: e.target.value }))}
+                        disabled={!isEditOtpVerified}
+                        placeholder="Enter email address"
                       />
                     </div>
                     <div>

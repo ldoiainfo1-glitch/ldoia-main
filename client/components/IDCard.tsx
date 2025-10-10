@@ -57,28 +57,29 @@ export default function IDCard({ member, onClose }: IDCardProps) {
     if (!cardRef.current) return;
 
     try {
-      // Capture the ID card as canvas
+      // Capture the ID card as canvas with better quality
       const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
+        scale: 3, // Higher quality
         backgroundColor: '#ffffff',
         logging: false,
+        useCORS: true,
       });
 
-      // Create PDF
+      // Create PDF - standard credit card size (85.60 × 53.98 mm)
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4',
+        format: [85.6, 53.98], // Credit card size
       });
 
-      const imgWidth = 297; // A4 landscape width
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdfWidth = 85.6;
+      const pdfHeight = 53.98;
 
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
       // Download PDF
-      const fileName = `LDOIA_ID_${member.name.replace(/\s+/g, '_')}_${member.applicationId || 'N/A'}.pdf`;
+      const fileName = `LDOIA_ID_${member.name.replace(/\s+/g, '_')}_${member.applicationId || Date.now()}.pdf`;
       pdf.save(fileName);
 
       alert('✅ ID Card downloaded successfully!');
@@ -90,7 +91,7 @@ export default function IDCard({ member, onClose }: IDCardProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-start justify-center z-[1000] p-4 pt-8 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-3xl w-full p-4 my-4">
+      <div className="bg-white rounded-lg max-w-xl w-full p-4 my-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-bold text-gray-900">Member ID Card</h3>
           <Button
