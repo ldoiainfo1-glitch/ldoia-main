@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Users, MapPin, Award, Building, Briefcase, UserCheck, Crown, Shield, Eye, Target, Building2, Check, ChevronsUpDown, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { locationData } from "@/data/locationData";
+import * as locationApi from "@/services/locationApi";
 import LanguageSelector from "@/components/LanguageSelector";
 import CommitteeTable from "@/components/CommitteeTable";
 import AdvisoryTable from "@/components/AdvisoryTable";
@@ -95,6 +96,15 @@ export default function Index() {
   
   // Dropdown state for Others column
   const [openDropdown, setOpenDropdown] = useState("");
+
+  // Available options from API (for cascading dropdowns)
+  const [availableZones, setAvailableZones] = useState<string[]>([]);
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
+  const [availableDivisions, setAvailableDivisions] = useState<string[]>([]);
+  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [availableTalukas, setAvailableTalukas] = useState<string[]>([]);
+  const [availablePincodes, setAvailablePincodes] = useState<string[]>([]);
+  const [availableVillages, setAvailableVillages] = useState<string[]>([]);
 
   // Application management state with loading indicators
   const [applications, setApplications] = useState<Record<string, any>>(() => {
@@ -312,6 +322,135 @@ export default function Index() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [openDropdown]);
+
+  // 🌍 Load zones when country is selected (or on mount)
+  useEffect(() => {
+    if (selectedCountry) {
+      locationApi.getZones(selectedCountry)
+        .then(zones => {
+          console.log('📍 Loaded zones:', zones.length);
+          setAvailableZones(zones);
+        })
+        .catch(err => console.error('Error loading zones:', err));
+    }
+  }, [selectedCountry]);
+
+  // 🗺️ Load states when zone is selected
+  useEffect(() => {
+    if (selectedCountry && selectedZone) {
+      locationApi.getStates(selectedCountry, selectedZone)
+        .then(states => {
+          console.log('📍 Loaded states:', states.length);
+          setAvailableStates(states);
+        })
+        .catch(err => console.error('Error loading states:', err));
+      
+      // Reset child selections
+      setSelectedState('');
+      setSelectedDiv('');
+      setSelectedDistrict('');
+      setSelectedTehsil('');
+      setSelectedPincode('');
+      setSelectedVillage('');
+    } else {
+      setAvailableStates([]);
+    }
+  }, [selectedCountry, selectedZone]);
+
+  // 🏛️ Load divisions when state is selected
+  useEffect(() => {
+    if (selectedCountry && selectedState) {
+      locationApi.getDivisions(selectedCountry, selectedState)
+        .then(divisions => {
+          console.log('📍 Loaded divisions:', divisions.length);
+          setAvailableDivisions(divisions);
+        })
+        .catch(err => console.error('Error loading divisions:', err));
+      
+      // Reset child selections
+      setSelectedDiv('');
+      setSelectedDistrict('');
+      setSelectedTehsil('');
+      setSelectedPincode('');
+      setSelectedVillage('');
+    } else {
+      setAvailableDivisions([]);
+    }
+  }, [selectedCountry, selectedState]);
+
+  // 🏘️ Load districts when division is selected
+  useEffect(() => {
+    if (selectedCountry && selectedState && selectedDiv) {
+      locationApi.getDistricts(selectedCountry, selectedState, selectedDiv)
+        .then(districts => {
+          console.log('📍 Loaded districts:', districts.length);
+          setAvailableDistricts(districts);
+        })
+        .catch(err => console.error('Error loading districts:', err));
+      
+      // Reset child selections
+      setSelectedDistrict('');
+      setSelectedTehsil('');
+      setSelectedPincode('');
+      setSelectedVillage('');
+    } else {
+      setAvailableDistricts([]);
+    }
+  }, [selectedCountry, selectedState, selectedDiv]);
+
+  // 🏙️ Load talukas when district is selected
+  useEffect(() => {
+    if (selectedCountry && selectedState && selectedDistrict) {
+      locationApi.getTalukas(selectedCountry, selectedState, selectedDistrict)
+        .then(talukas => {
+          console.log('📍 Loaded talukas:', talukas.length);
+          setAvailableTalukas(talukas);
+        })
+        .catch(err => console.error('Error loading talukas:', err));
+      
+      // Reset child selections
+      setSelectedTehsil('');
+      setSelectedPincode('');
+      setSelectedVillage('');
+    } else {
+      setAvailableTalukas([]);
+    }
+  }, [selectedCountry, selectedState, selectedDistrict]);
+
+  // 📮 Load pincodes when taluka is selected
+  useEffect(() => {
+    if (selectedCountry && selectedState && selectedDistrict && selectedTehsil) {
+      locationApi.getPincodes(selectedCountry, selectedState, selectedDistrict, selectedTehsil)
+        .then(pincodes => {
+          console.log('📍 Loaded pincodes:', pincodes.length);
+          setAvailablePincodes(pincodes);
+        })
+        .catch(err => console.error('Error loading pincodes:', err));
+      
+      // Reset child selections
+      setSelectedPincode('');
+      setSelectedVillage('');
+    } else {
+      setAvailablePincodes([]);
+    }
+  }, [selectedCountry, selectedState, selectedDistrict, selectedTehsil]);
+
+  // 🏘️ Load villages/post offices when pincode is selected
+  useEffect(() => {
+    if (selectedPincode) {
+      locationApi.getPostOffices(selectedPincode)
+        .then(villages => {
+          console.log('📍 Loaded post offices:', villages.length);
+          setAvailableVillages(villages);
+        })
+        .catch(err => console.error('Error loading post offices:', err));
+      
+      // Reset village selection
+      setSelectedVillage('');
+    } else {
+      setAvailableVillages([]);
+    }
+  }, [selectedPincode]);
 
   // Update name field when firstName or lastName changes
   useEffect(() => {
@@ -2604,14 +2743,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No zone found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && [
-                              'Northern', 
-                              'Central', 
-                              'Eastern', 
-                              'Western', 
-                              'Southern', 
-                              'North Eastern'
-                            ].filter(zone => 
+                            {availableZones.filter(zone => 
                               zone.toLowerCase().includes(searchZone.toLowerCase())
                             ).map((zone) => (
                               <CommandItem
@@ -2671,7 +2803,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No state found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && getStatesForZone(selectedZone).filter(state => 
+                            {availableStates.filter(state => 
                               state.toLowerCase().includes(searchState.toLowerCase())
                             ).map((state) => (
                               <CommandItem
@@ -2679,17 +2811,11 @@ const getPositionLevel = () => {
                                 value={state}
                                 onSelect={(currentValue) => {
                                   if (currentValue !== selectedState) {
-                                    // Auto-update zone when state is selected
-                                    const zone = getZoneForState(currentValue);
-                                    if (zone) {
-                                      setSelectedZone(zone);
-                                    }
                                     setSelectedState(currentValue);
                                     resetSelections("state");
                                   } else {
                                     setSelectedState("");
-                                    setSelectedZone("");
-                                    resetSelections("zone");
+                                    resetSelections("state");
                                   }
                                   setStateOpen(false);
                                   setSearchState("");
@@ -2742,7 +2868,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No division found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && getDivisionsForState(selectedState).filter(division => 
+                            {availableDivisions.filter(division => 
                               division.toLowerCase().includes(searchDivision.toLowerCase())
                             ).map((division) => (
                               <CommandItem
@@ -2750,15 +2876,6 @@ const getPositionLevel = () => {
                                 value={division}
                                 onSelect={(currentValue) => {
                                   if (currentValue !== selectedDiv) {
-                                    // Auto-update state and zone when division is selected
-                                    const stateName = getStateForDivision(currentValue);
-                                    if (stateName) {
-                                      setSelectedState(stateName);
-                                      const zone = getZoneForState(stateName);
-                                      if (zone) {
-                                        setSelectedZone(zone);
-                                      }
-                                    }
                                     setSelectedDiv(currentValue);
                                     resetSelections("div");
                                   } else {
@@ -2815,7 +2932,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No district found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && getDistrictsForDivision(selectedDiv).filter(district => 
+                            {availableDistricts.filter(district => 
                               district.toLowerCase().includes(searchDistrict.toLowerCase())
                             ).map((district) => (
                               <CommandItem
@@ -2823,19 +2940,6 @@ const getPositionLevel = () => {
                                 value={district}
                                 onSelect={(currentValue) => {
                                   if (currentValue !== selectedDistrict) {
-                                    // Auto-update division, state, and zone when district is selected
-                                    const divisionName = getDivisionForDistrict(currentValue);
-                                    if (divisionName) {
-                                      setSelectedDiv(divisionName);
-                                      const stateName = getStateForDivision(divisionName);
-                                      if (stateName) {
-                                        setSelectedState(stateName);
-                                        const zone = getZoneForState(stateName);
-                                        if (zone) {
-                                          setSelectedZone(zone);
-                                        }
-                                      }
-                                    }
                                     setSelectedDistrict(currentValue);
                                     resetSelections("district");
                                   } else {
@@ -2892,7 +2996,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No tehsil found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && getTehsilsForDistrict(selectedDistrict).filter(tehsil => 
+                            {availableTalukas.filter(tehsil => 
                               tehsil.toLowerCase().includes(searchTehsil.toLowerCase())
                             ).map((tehsil) => (
                               <CommandItem
@@ -2900,23 +3004,6 @@ const getPositionLevel = () => {
                                 value={tehsil}
                                 onSelect={(currentValue) => {
                                   if (currentValue !== selectedTehsil) {
-                                    // Auto-update district, division, state, and zone when tehsil is selected
-                                    const districtName = getDistrictForTehsil(currentValue);
-                                    if (districtName) {
-                                      setSelectedDistrict(districtName);
-                                      const divisionName = getDivisionForDistrict(districtName);
-                                      if (divisionName) {
-                                        setSelectedDiv(divisionName);
-                                        const stateName = getStateForDivision(divisionName);
-                                        if (stateName) {
-                                          setSelectedState(stateName);
-                                          const zone = getZoneForState(stateName);
-                                          if (zone) {
-                                            setSelectedZone(zone);
-                                          }
-                                        }
-                                      }
-                                    }
                                     setSelectedTehsil(currentValue);
                                     resetSelections("tehsil");
                                   } else {
@@ -2973,7 +3060,7 @@ const getPositionLevel = () => {
                         <CommandList>
                           <CommandEmpty>No pincode found.</CommandEmpty>
                           <CommandGroup>
-                            {selectedCountry && getPincodesForTehsil(selectedTehsil).filter(pincode => 
+                            {availablePincodes.filter(pincode => 
                               pincode.toLowerCase().includes(searchPincode.toLowerCase())
                             ).map((pincode) => (
                               <CommandItem
@@ -2981,27 +3068,6 @@ const getPositionLevel = () => {
                                 value={pincode}
                                 onSelect={(currentValue) => {
                                   if (currentValue !== selectedPincode) {
-                                    // Auto-update tehsil, district, division, state, and zone when pincode is selected
-                                    const tehsilName = getTehsilForPincode(currentValue);
-                                    if (tehsilName) {
-                                      setSelectedTehsil(tehsilName);
-                                      const districtName = getDistrictForTehsil(tehsilName);
-                                      if (districtName) {
-                                        setSelectedDistrict(districtName);
-                                        const divisionName = getDivisionForDistrict(districtName);
-                                        if (divisionName) {
-                                          setSelectedDiv(divisionName);
-                                          const stateName = getStateForDivision(divisionName);
-                                          if (stateName) {
-                                            setSelectedState(stateName);
-                                            const zone = getZoneForState(stateName);
-                                            if (zone) {
-                                              setSelectedZone(zone);
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
                                     setSelectedPincode(currentValue);
                                     resetSelections("pincode");
                                   } else {
@@ -3044,16 +3110,7 @@ const getPositionLevel = () => {
                       <SelectValue placeholder="Village" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-amber-200 shadow-xl max-h-60 overflow-y-auto">
-                      {selectedPincode && [
-                        'Central Post Office', 
-                        'Civil Lines Post Office', 
-                        'Railway Station Post Office', 
-                        'Market Post Office', 
-                        'Industrial Area Post Office',
-                        'University Post Office',
-                        'Hospital Post Office',
-                        'Bus Stand Post Office'
-                      ].filter(postOffice => 
+                      {availableVillages.filter(postOffice => 
                         postOffice.toLowerCase().includes(searchPostOffice.toLowerCase())
                       ).map((postOffice) => (
                         <SelectItem 

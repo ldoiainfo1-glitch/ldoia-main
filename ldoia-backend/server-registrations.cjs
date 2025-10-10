@@ -165,6 +165,14 @@ async function getPromotionRecordsCollection() {
   return db.collection('promotion_records');
 }
 
+// Helper function to get location data collection
+async function getLocationDataCollection() {
+  if (!db) {
+    await initializeDatabase();
+  }
+  return db.collection('location_data');
+}
+
 // Routes
 
 // Health check
@@ -2136,6 +2144,397 @@ app.delete('/api/promotions/images/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete promotion image'
+    });
+  }
+});
+
+// ==================== LOCATION DATA API ====================
+
+// Get all countries
+app.get('/api/locations/countries', async (req, res) => {
+  try {
+    const locationCollection = await getLocationDataCollection();
+    
+    // Get distinct countries
+    const countries = await locationCollection.distinct('country', { country: { $exists: true, $ne: '' } });
+    
+    res.json({
+      success: true,
+      countries: countries.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching countries:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch countries'
+    });
+  }
+});
+
+// Get zones by country
+app.get('/api/locations/zones', async (req, res) => {
+  try {
+    const { country } = req.query;
+    
+    if (!country) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country is required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    // Get distinct zones for the country
+    const zones = await locationCollection.distinct('zone', { 
+      country: country,
+      zone: { $exists: true, $ne: '' }
+    });
+    
+    res.json({
+      success: true,
+      zones: zones.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching zones:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch zones'
+    });
+  }
+});
+
+// Get states by country and zone
+app.get('/api/locations/states', async (req, res) => {
+  try {
+    const { country, zone } = req.query;
+    
+    if (!country) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country is required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: { $exists: true, $ne: '' }
+    };
+    
+    if (zone) {
+      query.zone = zone;
+    }
+    
+    // Get distinct states
+    const states = await locationCollection.distinct('state', query);
+    
+    res.json({
+      success: true,
+      states: states.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching states:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch states'
+    });
+  }
+});
+
+// Get divisions by state
+app.get('/api/locations/divisions', async (req, res) => {
+  try {
+    const { country, zone, state } = req.query;
+    
+    if (!country || !state) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country and state are required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: state,
+      division: { $exists: true, $ne: '' }
+    };
+    
+    if (zone) {
+      query.zone = zone;
+    }
+    
+    const divisions = await locationCollection.distinct('division', query);
+    
+    res.json({
+      success: true,
+      divisions: divisions.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching divisions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch divisions'
+    });
+  }
+});
+
+// Get districts by state
+app.get('/api/locations/districts', async (req, res) => {
+  try {
+    const { country, zone, state } = req.query;
+    
+    if (!country || !state) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country and state are required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: state,
+      district: { $exists: true, $ne: '' }
+    };
+    
+    if (zone) {
+      query.zone = zone;
+    }
+    
+    // Get distinct districts
+    const districts = await locationCollection.distinct('district', query);
+    
+    res.json({
+      success: true,
+      districts: districts.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching districts:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch districts'
+    });
+  }
+});
+
+// Get talukas/tehsils by district
+app.get('/api/locations/talukas', async (req, res) => {
+  try {
+    const { country, state, district } = req.query;
+    
+    if (!country || !state || !district) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country, state, and district are required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: state,
+      district: district,
+      taluka: { $exists: true, $ne: '' }
+    };
+    
+    const talukas = await locationCollection.distinct('taluka', query);
+    
+    res.json({
+      success: true,
+      talukas: talukas.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching talukas:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch talukas'
+    });
+  }
+});
+
+// Get cities by district
+app.get('/api/locations/cities', async (req, res) => {
+  try {
+    const { country, state, district } = req.query;
+    
+    if (!country || !state || !district) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country, state, and district are required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: state,
+      district: district,
+      city: { $exists: true, $ne: '' }
+    };
+    
+    // Get distinct cities
+    const cities = await locationCollection.distinct('city', query);
+    
+    res.json({
+      success: true,
+      cities: cities.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching cities:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch cities'
+    });
+  }
+});
+
+// Get pincodes by city
+app.get('/api/locations/pincodes', async (req, res) => {
+  try {
+    const { country, state, district, city } = req.query;
+    
+    if (!country || !state || !district || !city) {
+      return res.status(400).json({
+        success: false,
+        error: 'Country, state, district, and city are required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      country: country,
+      state: state,
+      district: district,
+      city: city,
+      pincode: { $exists: true, $ne: '' }
+    };
+    
+    // Get distinct pincodes
+    const pincodes = await locationCollection.distinct('pincode', query);
+    
+    res.json({
+      success: true,
+      pincodes: pincodes.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching pincodes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pincodes'
+    });
+  }
+});
+
+// Get post offices by pincode
+app.get('/api/locations/post-offices', async (req, res) => {
+  try {
+    const { pincode } = req.query;
+    
+    if (!pincode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Pincode is required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = { 
+      pincode: pincode,
+      postOffice: { $exists: true, $ne: '' }
+    };
+    
+    // Get distinct post offices
+    const postOffices = await locationCollection.distinct('postOffice', query);
+    
+    res.json({
+      success: true,
+      postOffices: postOffices.sort()
+    });
+  } catch (error) {
+    console.error('❌ Error fetching post offices:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch post offices'
+    });
+  }
+});
+
+// Bulk insert location data (for Excel import)
+app.post('/api/locations/bulk-import', async (req, res) => {
+  try {
+    const { data } = req.body;
+    
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Data array is required'
+      });
+    }
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    // Clear existing data (optional, remove if you want to keep existing data)
+    // await locationCollection.deleteMany({});
+    
+    // Insert new data
+    const result = await locationCollection.insertMany(data);
+    
+    console.log(`✅ Imported ${result.insertedCount} location records`);
+    
+    res.json({
+      success: true,
+           message: `Successfully imported ${result.insertedCount} location records`,
+      insertedCount: result.insertedCount
+    });
+    
+  } catch (error) {
+    console.error('❌ Error importing location data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to import location data',
+      details: error.message
+    });
+  }
+});
+
+// Get location hierarchy (complete path from country to post office)
+app.get('/api/locations/hierarchy', async (req, res) => {
+  try {
+    const { country, zone, state, district, city, pincode } = req.query;
+    
+    const locationCollection = await getLocationDataCollection();
+    
+    const query = {};
+    if (country) query.country = country;
+    if (zone) query.zone = zone;
+    if (state) query.state = state;
+    if (district) query.district = district;
+    if (city) query.city = city;
+    if (pincode) query.pincode = pincode;
+    
+    // Get all matching records
+    const locations = await locationCollection.find(query).toArray();
+    
+    res.json({
+      success: true,
+      locations: locations,
+      count: locations.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching location hierarchy:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch location hierarchy'
     });
   }
 });
