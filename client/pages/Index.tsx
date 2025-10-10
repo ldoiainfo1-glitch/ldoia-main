@@ -357,79 +357,92 @@ export default function Index() {
     }
   }, [selectedCountry, selectedZone]);
 
-  // 🏛️ Load divisions when state is selected
+  // 🏛️ Load divisions when state is selected (or ALL divisions if no state)
   useEffect(() => {
-    if (selectedCountry && selectedState) {
-      locationApi.getDivisions(selectedCountry, selectedState)
+    if (selectedCountry) {
+      locationApi.getDivisions(selectedCountry, selectedState || undefined)
         .then(divisions => {
           console.log('📍 Loaded divisions:', divisions.length);
           setAvailableDivisions(divisions);
         })
         .catch(err => console.error('Error loading divisions:', err));
       
-      // Reset child selections
-      setSelectedDiv('');
-      setSelectedDistrict('');
-      setSelectedTehsil('');
-      setSelectedPincode('');
-      setSelectedVillage('');
+      // Reset child selections only if state just changed
+      if (selectedState) {
+        setSelectedDiv('');
+        setSelectedDistrict('');
+        setSelectedTehsil('');
+        setSelectedPincode('');
+        setSelectedVillage('');
+      }
     } else {
       setAvailableDivisions([]);
     }
   }, [selectedCountry, selectedState]);
 
-  // 🏘️ Load districts when division is selected
+  // 🏘️ Load districts when division is selected (or ALL districts if no division)
   useEffect(() => {
-    if (selectedCountry && selectedState && selectedDiv) {
-      locationApi.getDistricts(selectedCountry, selectedState, selectedDiv)
+    if (selectedCountry) {
+      locationApi.getDistricts(selectedCountry, selectedState || undefined, selectedDiv || undefined)
         .then(districts => {
           console.log('📍 Loaded districts:', districts.length);
           setAvailableDistricts(districts);
         })
         .catch(err => console.error('Error loading districts:', err));
       
-      // Reset child selections
-      setSelectedDistrict('');
-      setSelectedTehsil('');
-      setSelectedPincode('');
-      setSelectedVillage('');
+      // Reset child selections only if division just changed
+      if (selectedDiv) {
+        setSelectedDistrict('');
+        setSelectedTehsil('');
+        setSelectedPincode('');
+        setSelectedVillage('');
+      }
     } else {
       setAvailableDistricts([]);
     }
   }, [selectedCountry, selectedState, selectedDiv]);
 
-  // 🏙️ Load talukas when district is selected
+  // 🏙️ Load talukas when district is selected (or ALL talukas if no district)
   useEffect(() => {
-    if (selectedCountry && selectedState && selectedDistrict) {
-      locationApi.getTalukas(selectedCountry, selectedState, selectedDistrict)
+    if (selectedCountry) {
+      console.log('🔍 Fetching talukas for:', { country: selectedCountry, state: selectedState, district: selectedDistrict });
+      locationApi.getTalukas(selectedCountry, selectedState || undefined, selectedDistrict || undefined)
         .then(talukas => {
-          console.log('📍 Loaded talukas:', talukas.length);
+          console.log('📍 Loaded talukas:', talukas.length, talukas);
           setAvailableTalukas(talukas);
         })
-        .catch(err => console.error('Error loading talukas:', err));
+        .catch(err => {
+          console.error('❌ Error loading talukas:', err);
+          setAvailableTalukas([]);
+        });
       
-      // Reset child selections
-      setSelectedTehsil('');
-      setSelectedPincode('');
-      setSelectedVillage('');
+      // Reset child selections only if district just changed
+      if (selectedDistrict) {
+        setSelectedTehsil('');
+        setSelectedPincode('');
+        setSelectedVillage('');
+      }
     } else {
+      console.log('⚠️ Clearing talukas - no country selected');
       setAvailableTalukas([]);
     }
   }, [selectedCountry, selectedState, selectedDistrict]);
 
-  // 📮 Load pincodes when taluka is selected
+  // 📮 Load pincodes when taluka is selected (or ALL pincodes if no taluka)
   useEffect(() => {
-    if (selectedCountry && selectedState && selectedDistrict && selectedTehsil) {
-      locationApi.getPincodes(selectedCountry, selectedState, selectedDistrict, selectedTehsil)
+    if (selectedCountry) {
+      locationApi.getPincodes(selectedCountry, selectedState || undefined, selectedDistrict || undefined, selectedTehsil || undefined)
         .then(pincodes => {
           console.log('📍 Loaded pincodes:', pincodes.length);
           setAvailablePincodes(pincodes);
         })
         .catch(err => console.error('Error loading pincodes:', err));
       
-      // Reset child selections
-      setSelectedPincode('');
-      setSelectedVillage('');
+      // Reset child selections only if taluka just changed
+      if (selectedTehsil) {
+        setSelectedPincode('');
+        setSelectedVillage('');
+      }
     } else {
       setAvailablePincodes([]);
     }
@@ -449,6 +462,76 @@ export default function Index() {
       setSelectedVillage('');
     } else {
       setAvailableVillages([]);
+    }
+  }, [selectedPincode]);
+
+  // 🔄 REVERSE LOOKUP: When division is selected, auto-fill zone and state
+  useEffect(() => {
+    if (selectedDiv && !selectedState) {
+      console.log('🔄 Reverse lookup for division:', selectedDiv);
+      locationApi.getParentLocations({ country: selectedCountry, division: selectedDiv })
+        .then(parents => {
+          if (parents) {
+            console.log('📍 Auto-filling from division:', parents);
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+          }
+        })
+        .catch(err => console.error('Error in reverse lookup:', err));
+    }
+  }, [selectedDiv]);
+
+  // 🔄 REVERSE LOOKUP: When district is selected, auto-fill zone, state, and division
+  useEffect(() => {
+    if (selectedDistrict && !selectedDiv) {
+      console.log('🔄 Reverse lookup for district:', selectedDistrict);
+      locationApi.getParentLocations({ country: selectedCountry, district: selectedDistrict })
+        .then(parents => {
+          if (parents) {
+            console.log('📍 Auto-filling from district:', parents);
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+          }
+        })
+        .catch(err => console.error('Error in reverse lookup:', err));
+    }
+  }, [selectedDistrict]);
+
+  // 🔄 REVERSE LOOKUP: When tehsil is selected, auto-fill everything above
+  useEffect(() => {
+    if (selectedTehsil && !selectedDistrict) {
+      console.log('🔄 Reverse lookup for tehsil:', selectedTehsil);
+      locationApi.getParentLocations({ country: selectedCountry, taluka: selectedTehsil })
+        .then(parents => {
+          if (parents) {
+            console.log('📍 Auto-filling from tehsil:', parents);
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
+          }
+        })
+        .catch(err => console.error('Error in reverse lookup:', err));
+    }
+  }, [selectedTehsil]);
+
+  // 🔄 REVERSE LOOKUP: When pincode is selected, auto-fill everything above
+  useEffect(() => {
+    if (selectedPincode && !selectedTehsil) {
+      console.log('🔄 Reverse lookup for pincode:', selectedPincode);
+      locationApi.getParentLocations({ country: selectedCountry, pincode: selectedPincode })
+        .then(parents => {
+          if (parents) {
+            console.log('📍 Auto-filling from pincode:', parents);
+            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
+            if (parents.state && !selectedState) setSelectedState(parents.state);
+            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
+            if (parents.taluka && !selectedTehsil) setSelectedTehsil(parents.taluka);
+          }
+        })
+        .catch(err => console.error('Error in reverse lookup:', err));
     }
   }, [selectedPincode]);
 

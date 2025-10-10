@@ -2243,15 +2243,15 @@ app.get('/api/locations/states', async (req, res) => {
   }
 });
 
-// Get divisions by state
+// Get divisions by state (or all divisions if no state provided)
 app.get('/api/locations/divisions', async (req, res) => {
   try {
-    const { country, zone, state } = req.query;
+    const { country, state } = req.query;
     
-    if (!country || !state) {
+    if (!country) {
       return res.status(400).json({
         success: false,
-        error: 'Country and state are required'
+        error: 'Country is required'
       });
     }
     
@@ -2259,14 +2259,15 @@ app.get('/api/locations/divisions', async (req, res) => {
     
     const query = { 
       country: country,
-      state: state,
       division: { $exists: true, $ne: '' }
     };
     
-    if (zone) {
-      query.zone = zone;
+    // Optional filter by state
+    if (state) {
+      query.state = state;
     }
     
+    // Get distinct divisions
     const divisions = await locationCollection.distinct('division', query);
     
     res.json({
@@ -2282,15 +2283,15 @@ app.get('/api/locations/divisions', async (req, res) => {
   }
 });
 
-// Get districts by state
+// Get districts by state/division (or all districts if no filters)
 app.get('/api/locations/districts', async (req, res) => {
   try {
-    const { country, zone, state } = req.query;
+    const { country, zone, state, division } = req.query;
     
-    if (!country || !state) {
+    if (!country) {
       return res.status(400).json({
         success: false,
-        error: 'Country and state are required'
+        error: 'Country is required'
       });
     }
     
@@ -2298,13 +2299,13 @@ app.get('/api/locations/districts', async (req, res) => {
     
     const query = { 
       country: country,
-      state: state,
       district: { $exists: true, $ne: '' }
     };
     
-    if (zone) {
-      query.zone = zone;
-    }
+    // Optional filters
+    if (zone) query.zone = zone;
+    if (state) query.state = state;
+    if (division) query.division = division;
     
     // Get distinct districts
     const districts = await locationCollection.distinct('district', query);
@@ -2322,15 +2323,15 @@ app.get('/api/locations/districts', async (req, res) => {
   }
 });
 
-// Get talukas/tehsils by district
+// Get talukas by district (or all talukas if no district)
 app.get('/api/locations/talukas', async (req, res) => {
   try {
     const { country, state, district } = req.query;
     
-    if (!country || !state || !district) {
+    if (!country) {
       return res.status(400).json({
         success: false,
-        error: 'Country, state, and district are required'
+        error: 'Country is required'
       });
     }
     
@@ -2338,11 +2339,14 @@ app.get('/api/locations/talukas', async (req, res) => {
     
     const query = { 
       country: country,
-      state: state,
-      district: district,
       taluka: { $exists: true, $ne: '' }
     };
     
+    // Optional filters
+    if (state) query.state = state;
+    if (district) query.district = district;
+    
+    // Get distinct talukas
     const talukas = await locationCollection.distinct('taluka', query);
     
     res.json({
@@ -2358,15 +2362,15 @@ app.get('/api/locations/talukas', async (req, res) => {
   }
 });
 
-// Get cities by district
+// Legacy endpoint - kept for backward compatibility
 app.get('/api/locations/cities', async (req, res) => {
   try {
     const { country, state, district } = req.query;
     
-    if (!country || !state || !district) {
+    if (!country) {
       return res.status(400).json({
         success: false,
-        error: 'Country, state, and district are required'
+        error: 'Country is required'
       });
     }
     
@@ -2374,13 +2378,15 @@ app.get('/api/locations/cities', async (req, res) => {
     
     const query = { 
       country: country,
-      state: state,
-      district: district,
-      city: { $exists: true, $ne: '' }
+      taluka: { $exists: true, $ne: '' }
     };
     
-    // Get distinct cities
-    const cities = await locationCollection.distinct('city', query);
+    // Optional filters
+    if (state) query.state = state;
+    if (district) query.district = district;
+    
+    // Get distinct cities (talukas)
+    const cities = await locationCollection.distinct('taluka', query);
     
     res.json({
       success: true,
@@ -2395,15 +2401,15 @@ app.get('/api/locations/cities', async (req, res) => {
   }
 });
 
-// Get pincodes by city
+// Get pincodes by taluka (or all pincodes if no filters)
 app.get('/api/locations/pincodes', async (req, res) => {
   try {
-    const { country, state, district, city } = req.query;
+    const { country, state, district, taluka, city } = req.query;
     
-    if (!country || !state || !district || !city) {
+    if (!country) {
       return res.status(400).json({
         success: false,
-        error: 'Country, state, district, and city are required'
+        error: 'Country is required'
       });
     }
     
@@ -2411,11 +2417,15 @@ app.get('/api/locations/pincodes', async (req, res) => {
     
     const query = { 
       country: country,
-      state: state,
-      district: district,
-      city: city,
       pincode: { $exists: true, $ne: '' }
     };
+    
+    // Optional filters
+    if (state) query.state = state;
+    if (district) query.district = district;
+    if (taluka) query.taluka = taluka;
+    // Support legacy 'city' parameter
+    if (city && !taluka) query.taluka = city;
     
     // Get distinct pincodes
     const pincodes = await locationCollection.distinct('pincode', query);

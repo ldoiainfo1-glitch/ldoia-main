@@ -6,15 +6,17 @@
 const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3001/api';
 
 export interface LocationHierarchy {
-  combine: string;
-  country_id: number;
+  combine?: string;
+  country_id?: number;
   country: string;
-  zone_id: number;
+  zone_id?: number;
   zone: string;
-  state_id: number;
+  state_id?: number;
   state: string;
+  division?: string;
   district_id?: number;
   district?: string;
+  taluka?: string;
   city_id?: number;
   city?: string;
   pincode?: string;
@@ -84,11 +86,14 @@ export async function getStates(country: string, zone?: string): Promise<string[
 }
 
 /**
- * Fetch divisions by country and state
+ * Fetch divisions by country and state (or all divisions if no state)
  */
-export async function getDivisions(country: string, state: string): Promise<string[]> {
+export async function getDivisions(country: string, state?: string): Promise<string[]> {
   try {
-    const url = `${API_BASE_URL}/locations/divisions?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}`;
+    let url = `${API_BASE_URL}/locations/divisions?country=${encodeURIComponent(country)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
     
     const response = await fetch(url);
     const data = await response.json();
@@ -105,11 +110,14 @@ export async function getDivisions(country: string, state: string): Promise<stri
 }
 
 /**
- * Fetch districts by state and optional division
+ * Fetch districts by country (optionally filtered by state/division/zone)
  */
-export async function getDistricts(country: string, state: string, division?: string, zone?: string): Promise<string[]> {
+export async function getDistricts(country: string, state?: string, division?: string, zone?: string): Promise<string[]> {
   try {
-    let url = `${API_BASE_URL}/locations/districts?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}`;
+    let url = `${API_BASE_URL}/locations/districts?country=${encodeURIComponent(country)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
     if (division) {
       url += `&division=${encodeURIComponent(division)}`;
     }
@@ -132,11 +140,17 @@ export async function getDistricts(country: string, state: string, division?: st
 }
 
 /**
- * Fetch talukas by country, state, and district
+ * Fetch talukas by country (optionally filtered by state/district)
  */
-export async function getTalukas(country: string, state: string, district: string): Promise<string[]> {
+export async function getTalukas(country: string, state?: string, district?: string): Promise<string[]> {
   try {
-    const url = `${API_BASE_URL}/locations/talukas?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}`;
+    let url = `${API_BASE_URL}/locations/talukas?country=${encodeURIComponent(country)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
+    if (district) {
+      url += `&district=${encodeURIComponent(district)}`;
+    }
     
     const response = await fetch(url);
     const data = await response.json();
@@ -153,11 +167,17 @@ export async function getTalukas(country: string, state: string, district: strin
 }
 
 /**
- * Fetch pincodes by taluka and district
+ * Fetch pincodes by country (optionally filtered by state/district/taluka)
  */
-export async function getPincodes(country: string, state: string, district: string, taluka?: string): Promise<string[]> {
+export async function getPincodes(country: string, state?: string, district?: string, taluka?: string): Promise<string[]> {
   try {
-    let url = `${API_BASE_URL}/locations/pincodes?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}`;
+    let url = `${API_BASE_URL}/locations/pincodes?country=${encodeURIComponent(country)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
+    if (district) {
+      url += `&district=${encodeURIComponent(district)}`;
+    }
     if (taluka) {
       url += `&taluka=${encodeURIComponent(taluka)}`;
     }
@@ -204,7 +224,9 @@ export async function getLocationHierarchy(filters: {
   country?: string;
   zone?: string;
   state?: string;
+  division?: string;
   district?: string;
+  taluka?: string;
   city?: string;
   pincode?: string;
 }): Promise<LocationHierarchy[]> {
@@ -214,7 +236,9 @@ export async function getLocationHierarchy(filters: {
     if (filters.country) params.append('country', filters.country);
     if (filters.zone) params.append('zone', filters.zone);
     if (filters.state) params.append('state', filters.state);
+    if (filters.division) params.append('division', filters.division);
     if (filters.district) params.append('district', filters.district);
+    if (filters.taluka) params.append('taluka', filters.taluka);
     if (filters.city) params.append('city', filters.city);
     if (filters.pincode) params.append('pincode', filters.pincode);
     
@@ -231,6 +255,50 @@ export async function getLocationHierarchy(filters: {
   } catch (error) {
     console.error('Error fetching location hierarchy:', error);
     return [];
+  }
+}
+
+/**
+ * Reverse lookup: Get parent locations from a child selection
+ * For example, if user selects pincode 400011, get zone, state, division, district, taluka
+ */
+export async function getParentLocations(filters: {
+  country?: string;
+  zone?: string;
+  state?: string;
+  division?: string;
+  district?: string;
+  taluka?: string;
+  pincode?: string;
+}): Promise<{
+  zone?: string;
+  state?: string;
+  division?: string;
+  district?: string;
+  taluka?: string;
+  pincode?: string;
+} | null> {
+  try {
+    const locations = await getLocationHierarchy(filters);
+    
+    if (locations.length === 0) {
+      return null;
+    }
+    
+    // Take first match (they should all have same parent hierarchy)
+    const location = locations[0];
+    
+    return {
+      zone: location.zone,
+      state: location.state,
+      division: location.division,
+      district: location.district,
+      taluka: location.taluka,
+      pincode: location.pincode
+    };
+  } catch (error) {
+    console.error('Error getting parent locations:', error);
+    return null;
   }
 }
 
@@ -272,5 +340,6 @@ export default {
   getPincodes,
   getPostOffices,
   getLocationHierarchy,
+  getParentLocations,
   bulkImportLocations,
 };
