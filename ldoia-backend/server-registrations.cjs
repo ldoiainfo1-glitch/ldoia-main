@@ -2185,10 +2185,10 @@ app.get('/api/locations/zones', async (req, res) => {
     
     const locationCollection = await getLocationDataCollection();
     
-    // Get distinct zones for the country
+    // Get distinct zones for the country, excluding "Unknown"
     const zones = await locationCollection.distinct('zone', { 
       country: country,
-      zone: { $exists: true, $ne: '' }
+      zone: { $exists: true, $ne: '', $nin: ['Unknown', 'unknown', 'UNKNOWN'] }
     });
     
     res.json({

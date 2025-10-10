@@ -473,8 +473,9 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from division:', parents);
-            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
-            if (parents.state && !selectedState) setSelectedState(parents.state);
+            // Only set if not already set
+            setSelectedZone(prev => prev || parents.zone || '');
+            setSelectedState(prev => prev || parents.state || '');
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -489,9 +490,10 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from district:', parents);
-            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
-            if (parents.state && !selectedState) setSelectedState(parents.state);
-            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
+            // Only set if not already set
+            setSelectedZone(prev => prev || parents.zone || '');
+            setSelectedState(prev => prev || parents.state || '');
+            setSelectedDiv(prev => prev || parents.division || '');
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -506,10 +508,11 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from tehsil:', parents);
-            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
-            if (parents.state && !selectedState) setSelectedState(parents.state);
-            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
-            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
+            // Only set if not already set
+            setSelectedZone(prev => prev || parents.zone || '');
+            setSelectedState(prev => prev || parents.state || '');
+            setSelectedDiv(prev => prev || parents.division || '');
+            setSelectedDistrict(prev => prev || parents.district || '');
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));
@@ -524,11 +527,12 @@ export default function Index() {
         .then(parents => {
           if (parents) {
             console.log('📍 Auto-filling from pincode:', parents);
-            if (parents.zone && !selectedZone) setSelectedZone(parents.zone);
-            if (parents.state && !selectedState) setSelectedState(parents.state);
-            if (parents.division && !selectedDiv) setSelectedDiv(parents.division);
-            if (parents.district && !selectedDistrict) setSelectedDistrict(parents.district);
-            if (parents.taluka && !selectedTehsil) setSelectedTehsil(parents.taluka);
+            // Only set if not already set - use functional setState to avoid overwriting
+            setSelectedZone(prev => prev || parents.zone || '');
+            setSelectedState(prev => prev || parents.state || '');
+            setSelectedDiv(prev => prev || parents.division || '');
+            setSelectedDistrict(prev => prev || parents.district || '');
+            setSelectedTehsil(prev => prev || parents.taluka || '');
           }
         })
         .catch(err => console.error('Error in reverse lookup:', err));

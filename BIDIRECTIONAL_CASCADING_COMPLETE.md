@@ -194,11 +194,13 @@ curl 'http://localhost:3001/api/locations/hierarchy?country=India&pincode=400011
 
 ## 📊 Database Statistics
 
+- **Total Zones:** 7 (across India)
+- **Total States:** 37 (across all zones)
 - **Total Divisions:** 480 (across all states)
+- **Total Districts:** 750 (across all divisions)
 - **Total Talukas:** 5,631 (across all districts)
-- **Total Districts:** 750+
-- **Total Pincodes:** 19,581+
-- **Total Post Offices:** 165,600
+- **Total Pincodes:** 19,581 (across all talukas)
+- **Total Post Offices:** 165,600 (across all pincodes)
 
 ## 🚀 Deployment Status
 
