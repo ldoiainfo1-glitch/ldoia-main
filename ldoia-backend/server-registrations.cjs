@@ -319,7 +319,6 @@ app.post('/api/applications', uploadFields, async (req, res) => {
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       phone_number: req.body.phone_number,
-      email: req.body.email,
       date_of_birth: req.body.date_of_birth,
       phone_verified: req.body.phone_verified === 'true',
       
@@ -379,6 +378,42 @@ app.post('/api/applications', uploadFields, async (req, res) => {
     // Insert application into MongoDB
     const result = await applications.insertOne(application);
     console.log(`✅ ${isAdvisory ? 'Advisory' : 'Committee'} application saved to MongoDB:`, result.insertedId);
+    
+    // Update referral count if referral code provided
+    if (req.body.referral_code) {
+      try {
+        console.log(`📊 Updating introduced count for referral code: ${req.body.referral_code}`);
+        
+        // Find and update the referrer's introduced count
+        const committeeApps = await getCommitteeApplicationsCollection();
+        const advisoryApps = await getAdvisoryApplicationsCollection();
+        
+        // Try committee collection first
+        let referrerUpdate = await committeeApps.findOneAndUpdate(
+          { phone_number: req.body.referral_code, application_status: 'approved' },
+          { $inc: { introduced: 1 } },
+          { returnDocument: 'after' }
+        );
+        
+        // If not found, try advisory collection
+        if (!referrerUpdate.value) {
+          referrerUpdate = await advisoryApps.findOneAndUpdate(
+            { phone_number: req.body.referral_code, application_status: 'approved' },
+            { $inc: { introduced: 1 } },
+            { returnDocument: 'after' }
+          );
+        }
+        
+        if (referrerUpdate.value) {
+          console.log(`✅ Referral count updated! ${req.body.referral_code} now has ${referrerUpdate.value.introduced || 1} referrals`);
+        } else {
+          console.log(`⚠️ Referral code ${req.body.referral_code} not found or not approved yet`);
+        }
+      } catch (refError) {
+        console.error('❌ Error updating referral count (non-critical):', refError);
+        // Don't fail the application submission if referral update fails
+      }
+    }
     
     res.json({ 
       success: true, 
@@ -2545,6 +2580,130 @@ app.get('/api/locations/hierarchy', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch location hierarchy'
+    });
+  }
+});
+
+// Search for referral members by mobile number (autocomplete)
+app.get('/api/search-referrals', async (req, res) => {
+  try {
+    const { search } = req.query;
+    
+    if (!search || search.length < 2) {
+      return res.json({
+        success: true,
+        members: []
+      });
+    }
+
+    console.log(`🔍 Searching for referrals with pattern: ${search}`);
+    
+    // Get both committee and advisory collections
+    const committeeApps = await getCommitteeApplicationsCollection();
+    const advisoryApps = await getAdvisoryApplicationsCollection();
+    
+    // Search in both collections for approved members whose phone starts with search text
+    const committeeMembers = await committeeApps.find({
+      application_status: 'approved',
+      phone_number: { $regex: `^${search}`, $options: 'i' }
+    }, {
+      projection: {
+        _id: 1,
+        applicant_name: 1,
+        phone_number: 1,
+        introduced: 1
+      }
+    }).limit(10).toArray();
+    
+    const advisoryMembers = await advisoryApps.find({
+      application_status: 'approved',
+      phone_number: { $regex: `^${search}`, $options: 'i' }
+    }, {
+      projection: {
+        _id: 1,
+        applicant_name: 1,
+        phone_number: 1,
+        introduced: 1
+      }
+    }).limit(10).toArray();
+    
+    // Combine and format results
+    const allMembers = [...committeeMembers, ...advisoryMembers];
+    const formattedMembers = allMembers.map(member => ({
+      id: member._id.toString(),
+      name: member.applicant_name,
+      phone: member.phone_number,
+      introduced: member.introduced || 0
+    }));
+    
+    console.log(`✅ Found ${formattedMembers.length} members matching "${search}"`);
+    
+    res.json({
+      success: true,
+      members: formattedMembers
+    });
+    
+  } catch (error) {
+    console.error('❌ Error searching referrals:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search referrals',
+      members: []
+    });
+  }
+});
+
+// Update introduced count for referrer
+app.post('/api/update-referral-count', async (req, res) => {
+  try {
+    const { referralPhone } = req.body;
+    
+    if (!referralPhone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Referral phone number is required'
+      });
+    }
+
+    console.log(`📊 Updating introduced count for referrer: ${referralPhone}`);
+    
+    // Try to find and update in committee collection first
+    const committeeApps = await getCommitteeApplicationsCollection();
+    let result = await committeeApps.findOneAndUpdate(
+      { phone_number: referralPhone, application_status: 'approved' },
+      { $inc: { introduced: 1 } },
+      { returnDocument: 'after' }
+    );
+    
+    // If not found in committee, try advisory
+    if (!result.value) {
+      const advisoryApps = await getAdvisoryApplicationsCollection();
+      result = await advisoryApps.findOneAndUpdate(
+        { phone_number: referralPhone, application_status: 'approved' },
+        { $inc: { introduced: 1 } },
+        { returnDocument: 'after' }
+      );
+    }
+    
+    if (result.value) {
+      console.log(`✅ Introduced count updated for ${referralPhone}. New count: ${result.value.introduced || 1}`);
+      res.json({
+        success: true,
+        introducedCount: result.value.introduced || 1,
+        message: 'Referral count updated successfully'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: 'Referrer not found or not approved'
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Error updating referral count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update referral count'
     });
   }
 });
